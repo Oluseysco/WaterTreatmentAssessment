@@ -41,7 +41,7 @@ I used a locally hosted llm via LangChain to help generate readable summaries of
 
 ## Setup Instruction
 
-1. How to clone the repository:  git clone https://github.comOluseysco/WaterTreatmentAssessment-Siga.git
+1. How to clone the repository:  git clone https://github.comOluseysco/WaterTreatmentAssessment.git
 
 2. Run the docker compose:  - docker -compose up --build
 
