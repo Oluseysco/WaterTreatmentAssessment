@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  sensor_simulator:
+    build:
+      context: .
+      dockerfile: Dockerfile.simulator
+    container_name: sensor_simulator
+    volumes:
+      - ./src:/app/src
+    command: python src/simulator.py
+    depends_on:
+      - anomaly_detector
+    restart: always
+
+  anomaly_detector:
+    build:
+      context: .
+      dockerfile: Dockerfile.detector
+    container_name: anomaly_detector
+    volumes:
+      - ./src:/app/src
+      - ./logs:/app/logs
+    command: python src/detector.py
+    restart: always
+
+  llm_summary:
+    build:
+      context: .
+      dockerfile: Dockerfile.summary
+    container_name: llm_summary
+    volumes:
+      - ./src:/app/src
+      - ./models:/app/models
+    command: python src/summary_agent.py
+    restart: always
+
+  api_server:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: api_server
+    volumes:
+      - ./src:/app/src
+      - ./logs:/app/logs
+    ports:
+      - "8000:8000"
+    command: uvicorn src.api_server:app --host 0.0.0.0 --port 8000 --reload
+    depends_on:
+      - anomaly_detector
+      - llm_summary
+    restart: always
+
+  local_llm:
+    image: ghcr.io/ggerganov/llama.cpp:latest
+    container_name: local_llm
+    volumes:
+      - ./models:/models
+    environment:
+      - MODEL_PATH=/models/mistral-7b-v0.1.Q2_K.gguf
+    ports:
+      - "8080:8080"
+    command: server --host 0.0.0.0 --port 8080 --model /models/mistral-7b-v0.1.Q2_K.gguf
+
+    restart: unless-stopped
