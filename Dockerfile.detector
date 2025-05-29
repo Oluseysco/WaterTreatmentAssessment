@@ -1,0 +1,10 @@
+FROM python:3.13.2-slim-bookworm
+
+# Use a specific Python version and slim image for smaller size
+WORKDIR /app
+COPY requirements.txt .
+RUN apt-get update && apt-get upgrade -y && apt-get clean && rm -rf /var/lib/apt/lists/* \
+	&& pip install --upgrade pip \
+	&& pip install -r requirements.txt
+COPY src/ ./src
+CMD ["python", "src/detector.py"]  # Change per file
