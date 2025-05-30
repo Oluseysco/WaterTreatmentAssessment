@@ -1,40 +1,31 @@
 from fastapi import FastAPI
-import json, os
+from detector import anomaly_log, check_dropouts
+from summary_agent import latest_summary
 
 app = FastAPI()
 
 @app.get("/anomalies")
 def get_anomalies():
-    if os.path.exists("logs/anomalies.json"):
-        with open("logs/anomalies.json") as f:
-            return [json.loads(line) for line in f.readlines()]
-    return []
+    return anomaly_log[-20:]
 
 @app.get("/summary")
 def get_summary():
-    if os.path.exists("logs/summary.txt"):
-        return {"summary": open("logs/summary.txt").read()}
-    return {"summary": "No summary yet"}
+    return {"summary": latest_summary}
 
 @app.get("/status")
 def get_status():
-    return {"status": "healthy", "components": ["sensor", "detector", "llm", "api"]}
-@app.get("/")
-def root():
-    return {"message": "Welcome to the Anomaly Detection API. Use /anomalies, /summary, or /status endpoints."}
-
+    return {"sensor_stream": "active", "llm_status": "running", "anomaly_check": "running"}
 @app.get("/health")
 def health_check():
     return {"status": "healthy"}
-@app.get("/logs")
+@app.get("/dropouts")
+def get_dropouts():
+    return check_dropouts()
+@app.get("/")
+def root():
+    return {"message": "Anomaly Detection API is running. Use /anomalies, /summary, /status, or /dropouts endpoints."}
 
-def get_logs():
-    logs = []
-    if os.path.exists("logs/anomalies.json"):
-        with open("logs/anomalies.json") as f:
-            logs.extend([json.loads(line) for line in f.readlines()])
-    if os.path.exists("logs/summary.txt"):
-        with open("logs/summary.txt") as f:
-            logs.append({"summary": f.read()})
-    return logs
-    return {"logs": logs}
+# This FastAPI application serves as the API server for the anomaly detection system.
+# It provides endpoints to retrieve anomalies, summaries, system status, and dropout alerts.
+# The `/anomalies` endpoint returns the last 20 anomalies detected.
+# The `/summary` endpoint provides the latest summary of anomalies.
