@@ -1,21 +1,31 @@
-import time, json, random
-from datetime import datetime
-import requests
+import random, time, json
+from datetime import datetime, timezone
 
-def simulate():
+SENSOR_ID = "wtf-pipe-1"
+
+NORMAL_RANGES = {
+    "temperature": (10, 35),
+    "pressure": (1.0, 3.0),
+    "flow": (20, 100)
+}
+
+def generate_reading():
+    return {
+        "timestamp": datetime.utcnow().replace(tzinfo=timezone.utc).isoformat(),
+        "sensor_id": SENSOR_ID,
+        "temperature": round(random.uniform(*NORMAL_RANGES["temperature"]), 1),
+        "pressure": round(random.uniform(*NORMAL_RANGES["pressure"]), 2),
+        "flow": round(random.uniform(*NORMAL_RANGES["flow"]), 1)
+    }
+def simulate_sensor_data():
     while True:
-        data = {
-            "timestamp": datetime.utcnow().isoformat() + "Z",
-            "sensor_id": "wtf-pipe-1",
-            "temperature": round(random.uniform(10, 35), 1),
-            "pressure": round(random.uniform(1.0, 3.0), 2),
-            "flow": round(random.uniform(20, 100), 1)
-        }
-        try:
-            requests.post("http://anomaly_detector:5001/data", json=data)
-        except Exception as e:
-            print("Failed to send:", e)
-        time.sleep(2)
-
+        reading = generate_reading()
+        print(f"Generated reading: {reading}")
+        with open("sensor_data.json", "a") as f:
+            f.write(json.dumps(reading) + "\n")
+        time.sleep(2)  # Simulate a reading every 2 seconds 
 if __name__ == "__main__":
-    simulate()
+    simulate_sensor_data()  
+    
+# This script simulates sensor data generation for a water treatment facility.
+# It generates readings for temperature, pressure, and flow within normal ranges.
